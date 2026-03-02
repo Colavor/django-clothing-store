@@ -1,6 +1,14 @@
 from django.contrib import admin
 from .models import Category, Product, ProductVariant, Stock, Order, OrderItem
 
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
+    extra = 1
+
+
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 1
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
