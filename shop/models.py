@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+from django.urls import reverse
 
 
 class Category(models.Model):
@@ -37,9 +39,14 @@ class Product(models.Model):
     class Meta:
         verbose_name = "Товар"
         verbose_name_plural = "Товары"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.name
+
+#ссылка на страницу товара
+    def get_absolute_url(self):
+        return reverse("product_detail", args=[self.pk])
 
 
 class ProductVariant(models.Model):
@@ -79,6 +86,11 @@ class Stock(models.Model):
     def __str__(self):
         return f"Остаток: {self.variant} - {self.quantity}"
 
+# оплаченных заказов
+class PaidOrderManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(status="paid")
+
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -96,8 +108,12 @@ class Order(models.Model):
         related_name="orders"
     )
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
+    paid_at = models.DateTimeField("Дата оплаты", null=True, blank=True)
     status = models.CharField("Статус", max_length=20, choices=STATUS_CHOICES, default="pending")
     delivery_address = models.CharField("Адрес доставки", max_length=255)
+
+    objects = models.Manager()
+    paid = PaidOrderManager()
 
     class Meta:
         verbose_name = "Заказ"
@@ -108,6 +124,16 @@ class Order(models.Model):
 
     def total_price(self):
         return sum(item.quantity * item.price for item in self.items.all())
+    #оплатить заказ
+    def mark_as_paid(self):
+        self.paid_at = timezone.now()
+        self.status = "paid"
+        self.save()
+    #получить заказы за сегодня
+    @classmethod
+    def for_today(cls):
+        today = timezone.now().date()
+        return cls.objects.filter(created_at__date=today)
 
 
 class OrderItem(models.Model):
@@ -131,3 +157,19 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.variant} x {self.quantity}"
+
+#дороже 5000 созданные в этом году
+def get_expensive_recent_products():
+    current_year = timezone.now().year
+    return Product.objects.filter(
+        base_price__gt=5000,
+        created_at__year=current_year,
+    )
+
+#все заказы пользователя, кроме отменённых.
+def get_user_orders_without_cancelled(user):
+    return user.orders.exclude(status="cancelled")
+
+#ссылка на страницу товара
+def get_product_detail_url(product):
+    return product.get_absolute_url()
