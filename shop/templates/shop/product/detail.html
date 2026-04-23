@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Карточка товара</title>
+</head>
+<body>
+    <h1>Карточка товара</h1>
+    <p><a href="{% url 'shop_home' %}">На главную</a></p>
+    <p><a href="{% url 'product_list' %}">К списку товаров</a></p>
+
+    <p><strong>ID:</strong> {{ product.id }}</p>
+    <p><strong>Название:</strong> {{ product.name }}</p>
+    <p><strong>Описание:</strong> {{ product.description|default:"-" }}</p>
+    <p><strong>Цена:</strong> {{ product.base_price }}</p>
+    <p><strong>Акционный:</strong> {% if product.is_promo %}Да{% else %}Нет{% endif %}</p>
+    <p><strong>Категория ID:</strong> {{ product.category_id }}</p>
+    <p><strong>Категория:</strong> {{ product.category.name }}</p>
+    <p><strong>Изображение:</strong> {% if product.image %}{{ product.image.url }}{% else %}-{% endif %}</p>
+    <p><strong>Файл manual:</strong> {% if product.manual %}{{ product.manual.url }}{% else %}-{% endif %}</p>
+    <p><strong>PDF файл:</strong> {% if product.pdf_file %}{{ product.pdf_file.url }}{% else %}-{% endif %}</p>
+    <p><strong>Теги:</strong>
+        {% for tag in product.tags.all %}
+            {{ tag.name }}{% if not forloop.last %}, {% endif %}
+        {% empty %}
+            -
+        {% endfor %}
+    </p>
+    <p><strong>Создан:</strong> {{ product.created_at }}</p>
+    <p><strong>Обновлён:</strong> {{ product.updated_at }}</p>
+</body>
+</html>

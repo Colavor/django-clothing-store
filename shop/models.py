@@ -27,6 +27,7 @@ class Product(models.Model):
     name = models.CharField("Название товара", max_length=255)
     description = models.TextField("Описание", blank=True)
     base_price = models.DecimalField("Базовая цена", max_digits=10, decimal_places=2)
+    is_promo = models.BooleanField(default=False)
     category = models.ForeignKey(
         Category,
         verbose_name="Категория",
@@ -35,6 +36,22 @@ class Product(models.Model):
     )
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     updated_at = models.DateTimeField("Дата обновления", auto_now=True)
+    tags = models.ManyToManyField(
+        "ProductTag",
+        through="ProductTagLink",
+        related_name="products",
+        verbose_name="Теги",
+        blank=True,
+    )
+    pdf_file = models.FileField(
+        "PDF",
+        upload_to="products/pdfs/",
+        blank=True,
+        null=True,
+    )
+    product_url = models.URLField("Ссылка на товар", blank=True)
+    image = models.ImageField("Изображение", upload_to="products/images/", blank=True, null=True)
+    manual = models.FileField("Файл", upload_to="products/files/", blank=True, null=True)
 
     class Meta:
         verbose_name = "Товар"
@@ -44,7 +61,6 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-#ссылка на страницу товара
     def get_absolute_url(self):
         return reverse("product_detail", args=[self.pk])
 
@@ -85,6 +101,27 @@ class Stock(models.Model):
 
     def __str__(self):
         return f"Остаток: {self.variant} - {self.quantity}"
+
+
+class ProductTag(models.Model):
+    name = models.CharField("Название тега", max_length=50, unique=True)
+
+    class Meta:
+        verbose_name = "Тег"
+        verbose_name_plural = "Теги"
+
+    def __str__(self):
+        return self.name
+
+
+class ProductTagLink(models.Model):
+    product = models.ForeignKey("Product", on_delete=models.CASCADE)
+    tag = models.ForeignKey(ProductTag, on_delete=models.CASCADE)
+    added_at = models.DateTimeField("Дата добавления", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Связь товара и тега"
+        verbose_name_plural = "Связи товара и тегов"
 
 # оплаченных заказов
 class PaidOrderManager(models.Manager):

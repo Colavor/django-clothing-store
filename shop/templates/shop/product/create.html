@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание товара</title>
+</head>
+<body>
+    <h1>Создать товар</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <p>
+            <label>Название:</label><br>
+            <input type="text" name="name" required>
+        </p>
+        <p>
+            <label>Описание:</label><br>
+            <textarea name="description"></textarea>
+        </p>
+        <p>
+            <label>Цена:</label><br>
+            <input type="number" step="0.01" name="base_price" value="1000" required>
+        </p>
+        <p>
+            <label>Категория:</label><br>
+            <select name="category_id" required>
+                {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </p>
+        <p>
+            <label>Изображение (необязательно):</label><br>
+            <input type="file" name="image" accept="image/*">
+        </p>
+        <button type="submit">Создать</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Изменить товар</title>
+</head>
+<body>
+    <h1>Изменить товар</h1>
+    <p><a href="{% url 'product_list' %}">К списку товаров</a></p>
+
+    <form method="post">
+        {% csrf_token %}
+        <p>
+            <label>Название:</label><br>
+            <input type="text" name="name" value="{{ product.name }}" required>
+        </p>
+        <p>
+            <label>Описание:</label><br>
+            <textarea name="description">{{ product.description }}</textarea>
+        </p>
+        <p>
+            <label>Цена:</label><br>
+            <input type="number" step="0.01" name="base_price" value="{{ product.base_price }}" required>
+        </p>
+        <p>
+            <label>Категория:</label><br>
+            <select name="category_id" required>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category.id == product.category_id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </p>
+        <button type="submit">Сохранить</button>
+    </form>
+</body>
+</html>

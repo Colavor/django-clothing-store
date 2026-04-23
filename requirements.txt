@@ -1,0 +1,5 @@
+django==6.0.2
+xhtml2pdf
+weasyprint
+Pillow
+

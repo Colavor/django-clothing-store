@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Product PDF</title>
+    <style>
+      body {
+        font-size: 14px;
+      }
+      h1 {
+        font-size: 20px;
+        margin-bottom: 12px;
+      }
+      .row {
+        margin: 6px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Карточка товара</h1>
+    <div class="row">ID: {{ product.id }}</div>
+    <div class="row">Название: {{ product.name }}</div>
+    <div class="row">Категория ID: {{ product.category_id }}</div>
+    <div class="row">Цена: {{ product.base_price }}</div>
+    <div class="row">Создан: {{ product.created_at }}</div>
+    <div class="row">Обновлен: {{ product.updated_at }}</div>
+  </body>
+</html>

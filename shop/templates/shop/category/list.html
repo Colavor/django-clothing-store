@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Список категорий</title>
+</head>
+<body>
+    <h1>Список категорий</h1>
+    <p><a href="{% url 'shop_home' %}">На главную</a></p>
+
+    {% if categories %}
+        <ul>
+            {% for category in categories %}
+                <li>
+                    ID: {{ category.id }} | {{ category.name }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Категорий пока нет.</p>
+    {% endif %}
+</body>
+</html>

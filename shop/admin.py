@@ -1,5 +1,20 @@
 from django.contrib import admin
-from .models import Category, Product, ProductVariant, Stock, Order, OrderItem
+from django.urls import reverse
+from django.utils.html import format_html
+from django.core.files.base import ContentFile
+from django.template.loader import render_to_string
+from django.contrib import messages
+from django.http import HttpResponse
+from .models import (
+    Category,
+    Order,
+    OrderItem,
+    Product,
+    ProductTag,
+    ProductTagLink,
+    ProductVariant,
+    Stock,
+)
 
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
@@ -9,6 +24,12 @@ class ProductVariantInline(admin.TabularInline):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 1
+
+
+class ProductTagLinkInline(admin.TabularInline):
+    model = ProductTagLink
+    extra = 1
+
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -20,12 +41,45 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "category", "base_price", "created_at")
+    list_display = ("id", "name", "category", "base_price", "created_at", "pdf_link")
     list_filter = ("category", "created_at")
     search_fields = ("name", "category__name")
     date_hierarchy = "created_at"
-    inlines = [ProductVariantInline]
+    inlines = [ProductVariantInline, ProductTagLinkInline]
     list_display_links = ("id", "name")
+    actions = ["mark_as_promo", "unmark_as_promo", "generate_pdf_action"]
+
+    @admin.action(description="Сделать акцией")
+    def mark_as_promo(self, request, queryset):
+        queryset.update(is_promo=True)
+
+    @admin.action(description="Убрать из акции")
+    def unmark_as_promo(self, request, queryset):
+        queryset.update(is_promo=False)
+
+    @admin.display(description="PDF")
+    def pdf_link(self, obj):
+        if obj.pdf_file:
+            return format_html('<a href="{0}">Скачать</a>', obj.pdf_file.url)
+        return "-"
+
+    @admin.action(description="Сгенерировать PDF документ для выбранных товаров")
+    def generate_pdf_action(self, request, queryset):
+        try:
+            from weasyprint import HTML as WeasyHTML
+        except Exception:
+            self.message_user(request, "WeasyPrint недоступен на этом окружении.", level=messages.ERROR)
+            return
+
+        generated = 0
+        for product in queryset:
+            html = render_to_string("shop/product/pdf.html", {"product": product, "request": request})
+            pdf_bytes = WeasyHTML(string=html, base_url=request.build_absolute_uri("/")).write_pdf()
+            file_name = f"product_{product.id}.pdf"
+            product.pdf_file.save(file_name, ContentFile(pdf_bytes), save=True)
+            generated += 1
+
+        self.message_user(request, f"PDF сгенерирован: {generated} шт.")
 
 
 @admin.register(ProductVariant)
@@ -69,3 +123,16 @@ class OrderItemAdmin(admin.ModelAdmin):
     list_display = ("id", "order", "variant", "quantity", "price")
     raw_id_fields = ("order", "variant")
     search_fields = ("variant__product__name",)
+
+
+@admin.register(ProductTag)
+class ProductTagAdmin(admin.ModelAdmin):
+    list_display = ("id", "name")
+    search_fields = ("name",)
+
+
+@admin.register(ProductTagLink)
+class ProductTagLinkAdmin(admin.ModelAdmin):
+    list_display = ("id", "product", "tag", "added_at")
+    raw_id_fields = ("product", "tag")
+    search_fields = ("tag__name", "product__name")
